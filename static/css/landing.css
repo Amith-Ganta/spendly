@@ -14,7 +14,13 @@
 }
 
 .hero-inner {
+    width: 100%;
     max-width: 680px;
+    text-align: center;
+}
+
+.hero-actions {
+    justify-content: center;
 }
 
 .hero-badge {
