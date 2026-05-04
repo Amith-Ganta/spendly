@@ -87,7 +87,7 @@ Type scale: 12 / 14 / 16 / 20 / 24 / 32px. Weights: 400 body, 500 medium, 600 se
 ### Icons (Lucide)
 Load once in `base.html`:
 ```html
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/lucide@1.14.0/dist/umd/lucide.js"></script>
 ```
 Call `lucide.createIcons()` after DOM ready (and after any dynamic DOM insert). Use in templates:
 ```html

@@ -38,10 +38,11 @@ No new dependencies.
 - Passwords hashed with werkzeug (no changes to auth in this step)
 - Use CSS variables — never hardcode hex values
 - All templates extend `base.html`
-- No inline styles
+- No inline styles except dynamic Jinja2 values (e.g. `style="width: {{ cat.pct }}%"` for progress bars — this is the only acceptable exception)
 - Authentication guard: check `session.get("user_id")`; if absent, `redirect(url_for("login"))`
 - All data passed to the template must be hardcoded Python dicts/lists in `app.py` — no DB queries in this step
 - Category badges must use a CSS class, not inline colour styles
+- Transaction table must be wrapped in a scrollable container for mobile
 
 ## Definition of done
 - [ ] Visiting `/profile` without being logged in redirects to `/login`
@@ -50,5 +51,5 @@ No new dependencies.
 - [ ] The page displays at least three summary stat values (e.g. total spent, transaction count, top category)
 - [ ] The page displays a transaction history table with at least three hardcoded rows
 - [ ] The page displays a category breakdown section with at least three categories
-- [ ] The navbar shows the logged-in state (username + logout link)
+- [ ] The navbar shows the logged-in state (Profile link + logout button) — username display is deferred to Step 5 when real user data is fetched from DB
 - [ ] No hex colour values appear in `profile.html` — only CSS variables
