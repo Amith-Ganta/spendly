@@ -13,7 +13,7 @@ app.secret_key = "dev-secret-key"
 
 def login_required():
     if not session.get("user_id"):
-        return redirect(url_for("login"))
+        abort(401)
 
 
 # ------------------------------------------------------------------ #
@@ -91,7 +91,7 @@ def login():
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     return redirect(url_for("landing"))

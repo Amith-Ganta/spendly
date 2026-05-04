@@ -16,7 +16,7 @@ routes can guard themselves without duplicating session checks.
 
 ## Routes
 
-- `POST /login` — validate credentials, set session, redirect to `/expenses` — public
+- `POST /login` — validate credentials, set session, redirect to `/` — public
 - `GET /logout` — clear session, redirect to `/` — public (no login required to log out)
 
 > `GET /login` already exists; the route function must be updated to handle both
@@ -67,7 +67,7 @@ No new dependencies — `werkzeug.security` is already installed.
 - On bad credentials, re-render `login.html` with `error="Invalid email or password."` — never reveal which field was wrong
 - `session.clear()` on logout — don't pop individual keys
 - After logout, redirect to `url_for('landing')`
-- After login, redirect to `url_for('dashboard')` — this route is a stub for now; redirect to `url_for('landing')` if dashboard is not yet defined
+- After login, redirect to `url_for('landing')` — a dashboard route does not exist yet
 
 ## Definition of done
 
