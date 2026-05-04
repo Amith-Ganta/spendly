@@ -1,11 +1,7 @@
 from flask import Flask, render_template
-from database.db import get_db, init_db, seed_db
+from database.db import init_db, seed_db
 
 app = Flask(__name__)
-
-with app.app_context():
-    init_db()
-    seed_db()
 
 
 # ------------------------------------------------------------------ #
@@ -67,4 +63,7 @@ def delete_expense(id):
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        init_db()
+        seed_db()
     app.run(debug=True, port=5001)

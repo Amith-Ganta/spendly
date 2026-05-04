@@ -85,7 +85,7 @@ with app.app_context():
 | `database/db.py` | Implement `get_db()`, `init_db()`, `seed_db()` |
 | `app.py` | Add imports and startup calls |
 
-**No new files to create.**
+**No new app implementation files to create** — this applies to `app.py` and `database/db.py` only, not repo scaffolding or spec docs.
 
 ---
 

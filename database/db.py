@@ -40,30 +40,30 @@ def init_db():
 
 def seed_db():
     conn = get_db()
-    count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    if count > 0:
+    try:
+        cursor = conn.execute(
+            "INSERT OR IGNORE INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+            ("Demo User", "demo@spendly.com", generate_password_hash("demo123")),
+        )
+        if cursor.rowcount == 0:
+            conn.close()
+            return
+
+        user_id = cursor.lastrowid
+        expenses = [
+            (user_id, 12.50,  "Food",          "2026-05-01", "Lunch at cafe"),
+            (user_id, 35.00,  "Transport",     "2026-05-02", "Monthly bus pass top-up"),
+            (user_id, 120.00, "Bills",         "2026-05-03", "Electricity bill"),
+            (user_id, 25.00,  "Health",        "2026-05-05", "Pharmacy"),
+            (user_id, 15.00,  "Entertainment", "2026-05-07", "Streaming subscription"),
+            (user_id, 60.00,  "Shopping",      "2026-05-10", "New shoes"),
+            (user_id, 8.75,   "Food",          "2026-05-12", "Groceries top-up"),
+            (user_id, 20.00,  "Other",         "2026-05-15", "Miscellaneous"),
+        ]
+        conn.executemany(
+            "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+            expenses,
+        )
+        conn.commit()
+    finally:
         conn.close()
-        return
-
-    cursor = conn.execute(
-        "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
-        ("Demo User", "demo@spendly.com", generate_password_hash("demo123")),
-    )
-    user_id = cursor.lastrowid
-
-    expenses = [
-        (user_id, 12.50,  "Food",          "2026-05-01", "Lunch at cafe"),
-        (user_id, 35.00,  "Transport",     "2026-05-02", "Monthly bus pass top-up"),
-        (user_id, 120.00, "Bills",         "2026-05-03", "Electricity bill"),
-        (user_id, 25.00,  "Health",        "2026-05-05", "Pharmacy"),
-        (user_id, 15.00,  "Entertainment", "2026-05-07", "Streaming subscription"),
-        (user_id, 60.00,  "Shopping",      "2026-05-10", "New shoes"),
-        (user_id, 8.75,   "Food",          "2026-05-12", "Groceries top-up"),
-        (user_id, 20.00,  "Other",         "2026-05-15", "Miscellaneous"),
-    ]
-    conn.executemany(
-        "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
-        expenses,
-    )
-    conn.commit()
-    conn.close()
