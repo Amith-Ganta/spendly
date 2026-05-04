@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, render_template, request, session, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from database.db import init_db, seed_db, create_user
 
 app = Flask(__name__)
@@ -30,9 +30,6 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
 
-    if request.method != "POST":
-        abort(405)
-
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip()
     password = request.form.get("password", "")
@@ -44,6 +41,10 @@ def register():
 
     if password != confirm_password:
         flash("Passwords do not match.")
+        return render_template("register.html")
+
+    if len(password) < 8:
+        flash("Password must be at least 8 characters.")
         return render_template("register.html")
 
     try:
