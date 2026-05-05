@@ -20,8 +20,8 @@
             </a>
             <div class="nav-links">
                 {% if session.user_id %}
-                <a href="{{ url_for('profile') }}">Profile</a>
-                <form method="POST" action="{{ url_for('logout') }}" style="display:inline">
+                <a href="{{ url_for('profile') }}" class="nav-profile">Profile</a>
+                <form method="POST" action="{{ url_for('logout') }}" class="nav-logout-form">
                     <button type="submit" class="nav-link-btn">Sign out</button>
                 </form>
                 {% else %}

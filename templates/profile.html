@@ -41,26 +41,26 @@
     <!-- Transaction history -->
     <h2 class="section-title">Recent Transactions</h2>
     <div class="table-wrapper">
-    <table class="transactions-table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Category</th>
-                <th class="col-amount">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tx in transactions %}
-            <tr>
-                <td>{{ tx.date }}</td>
-                <td>{{ tx.description }}</td>
-                <td><span class="badge badge--{{ tx.category | lower }}">{{ tx.category }}</span></td>
-                <td class="col-amount">€{{ tx.amount }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th class="col-amount">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ tx.date }}</td>
+                    <td>{{ tx.description }}</td>
+                    <td><span class="badge badge--{{ tx.category | lower }}">{{ tx.category }}</span></td>
+                    <td class="col-amount">€{{ tx.amount }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Category breakdown -->
