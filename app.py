@@ -2,6 +2,7 @@ import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, session
 from werkzeug.security import check_password_hash
 from database.db import init_db, seed_db, create_user, get_user_by_email
+from database import queries
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -101,38 +102,25 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    if not session.get("user_id"):
+    user_id = session.get("user_id")
+    if not user_id:
         return redirect(url_for("login"))
 
-    user = {
-        "name": "Demo User",
-        "email": "demo@spendly.com",
-        "member_since": "1 May 2026",
-        "initials": "DU",
-    }
-    stats = {
-        "total_spent": "296.25",
-        "transaction_count": 8,
-        "top_category": "Bills",
-    }
-    transactions = [
-        {"date": "15 May 2026", "description": "Miscellaneous",          "category": "Other",         "amount": "20.00"},
-        {"date": "12 May 2026", "description": "Groceries top-up",       "category": "Food",          "amount": "8.75"},
-        {"date": "10 May 2026", "description": "New shoes",              "category": "Shopping",      "amount": "60.00"},
-        {"date": "7 May 2026",  "description": "Streaming subscription", "category": "Entertainment", "amount": "15.00"},
-        {"date": "5 May 2026",  "description": "Pharmacy",               "category": "Health",        "amount": "25.00"},
-    ]
-    categories = [
-        {"name": "Bills",         "total": "120.00", "pct": 40},
-        {"name": "Shopping",      "total": "60.00",  "pct": 20},
-        {"name": "Transport",     "total": "35.00",  "pct": 12},
-        {"name": "Health",        "total": "25.00",  "pct": 8},
-        {"name": "Food",          "total": "21.25",  "pct": 7},
-        {"name": "Other",         "total": "20.00",  "pct": 7},
-        {"name": "Entertainment", "total": "15.00",  "pct": 5},
-    ]
-    return render_template("profile.html", user=user, stats=stats,
-                           transactions=transactions, categories=categories)
+    user = queries.get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    stats = queries.get_summary_stats(user_id)
+    transactions = queries.get_recent_transactions(user_id)
+    categories = queries.get_category_breakdown(user_id)
+    return render_template(
+        "profile.html",
+        user=user,
+        stats=stats,
+        transactions=transactions,
+        categories=categories,
+    )
 
 
 @app.route("/expenses/add")
