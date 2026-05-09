@@ -99,6 +99,12 @@ def get_category_breakdown(user_id):
         return []
 
     grand = sum(r["total"] for r in rows)
+    if grand == 0:
+        return [
+            {"name": r["name"], "total": f"{r['total']:.2f}", "pct": 0}
+            for r in rows
+        ]
+
     pcts = [round(r["total"] / grand * 100) for r in rows]
     delta = 100 - sum(pcts)
     pcts[0] += delta

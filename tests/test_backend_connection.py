@@ -70,3 +70,26 @@ def test_get_category_breakdown_seed(app, seed_user_id):
 
 def test_get_category_breakdown_empty(app, empty_user_id):
     assert get_category_breakdown(empty_user_id) == []
+
+
+def test_get_category_breakdown_all_zero_amounts(app, empty_user_id):
+    from database.db import get_db
+
+    conn = get_db()
+    try:
+        conn.executemany(
+            "INSERT INTO expenses (user_id, amount, category, date, description) "
+            "VALUES (?, ?, ?, ?, ?)",
+            [
+                (empty_user_id, 0.0, "Food", "2026-05-01", "Free sample"),
+                (empty_user_id, 0.0, "Transport", "2026-05-02", "Walked"),
+            ],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    cats = get_category_breakdown(empty_user_id)
+    assert len(cats) == 2
+    assert all(c["pct"] == 0 for c in cats)
+    assert all(c["total"] == "0.00" for c in cats)
