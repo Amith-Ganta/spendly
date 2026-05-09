@@ -18,8 +18,8 @@ Extract from $ARGUMENTS:
 - months — integer, how many past months to spread them across
 
 If any argument is missing or not a valid integer, stop and say:
-"Usage: /seed-expense <user_id> <count> <months>
-Example: /seed-expense 1 50 6"
+"Usage: /seed-expenses <user_id> <count> <months>
+Example: /seed-expenses 1 50 6"
 
 ## Step 2 — Verify user exists
 
