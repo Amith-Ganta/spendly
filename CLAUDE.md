@@ -13,7 +13,8 @@ Spendly is a lightweight personal expense tracker built with Flask and SQLite.
 spendly/
 ├── app.py              # All routes — single file, no blueprints
 ├── database/
-│   └── db.py           # SQLite helpers: get_db(), init_db(), seed_db()
+│   ├── db.py           # SQLite schema + connection helpers: get_db(), init_db(), seed_db()
+│   └── queries.py      # Read-side query helpers (profile data, stats, breakdowns)
 ├── templates/
 │   ├── base.html       # Shared layout — all templates must extend this
 │   └── *.html          # One template per page
@@ -28,7 +29,9 @@ spendly/
 
 **Where things belong:**
 - New routes → `app.py` only, no blueprints
-- DB logic → `database/db.py` only, never inline in routes
+- DB logic → `database/` package only, never inline in routes
+  - Schema, connection helpers, and writes (`get_db`, `init_db`, `seed_db`, `create_user`) → `database/db.py`
+  - Read-side query helpers used by routes → `database/queries.py`
 - New pages → new `.html` file extending `base.html`
 - Page-specific styles → new `.css` file, not inline `<style>` tags
 
@@ -113,9 +116,9 @@ pytest -s
 
 - **Never use raw string returns for stub routes** once a step is implemented — always render a template
 - **Never hardcode URLs** in templates — always use `url_for()`
-- **Never put DB logic in route functions** — it belongs in `database/db.py`
+- **Never put DB logic in route functions** — it belongs in `database/db.py` (writes/schema) or `database/queries.py` (reads)
 - **Never install new packages** mid-feature without flagging it — keep `requirements.txt` in sync
 - **Never use JS frameworks** — the frontend is intentionally vanilla
-- **`database/db.py` has `get_db()`, `init_db()`, `seed_db()` implemented** — use these helpers in routes, never inline DB logic
+- **`database/db.py` has `get_db()`, `init_db()`, `seed_db()`, `get_user_by_email()`, `create_user()` implemented**, and **`database/queries.py` has `get_user_by_id()`, `get_summary_stats()`, `get_recent_transactions()`, `get_category_breakdown()`** — use these helpers in routes, never inline DB logic
 - **FK enforcement is manual** — SQLite foreign keys are off by default; `get_db()` must run `PRAGMA foreign_keys = ON` on every connection
 - The app runs on **port 5001**, not the Flask default 5000 — don't change this
