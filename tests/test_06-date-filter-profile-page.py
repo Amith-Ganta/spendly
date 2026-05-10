@@ -8,12 +8,12 @@ Covers:
   3. Preset active-state detection in rendered HTML.
   4. Currency symbol (₹) consistency across all filter states.
 
-Today's fixed date used for preset calculations: 2026-05-10
 Seed data: 8 expenses for demo@spendly.com, dates 2026-05-01 → 2026-05-15
   (user_id resolved at runtime via seed_user_id fixture)
 """
 
 import pytest
+from app import _preset_range
 from database.queries import (
     get_summary_stats,
     get_recent_transactions,
@@ -21,17 +21,13 @@ from database.queries import (
 )
 
 # ---------------------------------------------------------------------------
-# Preset date strings (computed from spec literals, NOT from app helpers)
-# Today = 2026-05-10
+# Preset date strings — computed from app._preset_range() so the tests
+# stay valid regardless of what today's date actually is.
+# (Earlier hardcoded literals broke on any day other than 2026-05-10.)
 # ---------------------------------------------------------------------------
-THIS_MONTH_FROM = "2026-05-01"
-THIS_MONTH_TO = "2026-05-10"
-
-LAST_3_FROM = "2026-03-01"
-LAST_3_TO = "2026-05-10"
-
-LAST_6_FROM = "2025-12-01"
-LAST_6_TO = "2026-05-10"
+THIS_MONTH_FROM, THIS_MONTH_TO = _preset_range("month")
+LAST_3_FROM, LAST_3_TO = _preset_range("3months")
+LAST_6_FROM, LAST_6_TO = _preset_range("6months")
 
 
 # ===========================================================================
