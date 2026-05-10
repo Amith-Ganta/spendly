@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, session
 from werkzeug.security import check_password_hash
 from database.db import init_db, seed_db, create_user, get_user_by_email
@@ -15,6 +16,42 @@ app.secret_key = "dev-secret-key"
 def login_required():
     if not session.get("user_id"):
         abort(401)
+
+
+def _parse_iso_date(value):
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _preset_range(preset, today=None):
+    today = today or date.today()
+    if preset == "month":
+        n = 1
+    elif preset == "3months":
+        n = 3
+    elif preset == "6months":
+        n = 6
+    else:
+        return (None, None)
+    months_back = n - 1
+    y, m = today.year, today.month - months_back
+    while m <= 0:
+        m += 12
+        y -= 1
+    return (date(y, m, 1).isoformat(), today.isoformat())
+
+
+def _detect_active_preset(date_from_str, date_to_str, today=None):
+    if not date_from_str and not date_to_str:
+        return "all"
+    for name in ("month", "3months", "6months"):
+        if (date_from_str, date_to_str) == _preset_range(name, today):
+            return name
+    return "custom"
 
 
 # ------------------------------------------------------------------ #
@@ -111,15 +148,35 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
-    stats = queries.get_summary_stats(user_id)
-    transactions = queries.get_recent_transactions(user_id)
-    categories = queries.get_category_breakdown(user_id)
+    df = _parse_iso_date(request.args.get("date_from", "").strip())
+    dt = _parse_iso_date(request.args.get("date_to", "").strip())
+    if df and dt and df > dt:
+        flash("Start date must be before end date.")
+        df = dt = None
+
+    df_iso = df.isoformat() if df else None
+    dt_iso = dt.isoformat() if dt else None
+
+    stats = queries.get_summary_stats(user_id, date_from=df_iso, date_to=dt_iso)
+    transactions = queries.get_recent_transactions(user_id, date_from=df_iso, date_to=dt_iso)
+    categories = queries.get_category_breakdown(user_id, date_from=df_iso, date_to=dt_iso)
+
+    today = date.today()
+    presets = {
+        "month": _preset_range("month", today),
+        "3months": _preset_range("3months", today),
+        "6months": _preset_range("6months", today),
+    }
     return render_template(
         "profile.html",
         user=user,
         stats=stats,
         transactions=transactions,
         categories=categories,
+        date_from=df_iso or "",
+        date_to=dt_iso or "",
+        presets=presets,
+        active_preset=_detect_active_preset(df_iso, dt_iso, today),
     )
 
 
