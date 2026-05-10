@@ -28,7 +28,10 @@ Time" (unfiltered) view rather than erroring out.
 
 ## Database changes
 No database changes. The `expenses.date` column (`TEXT`, `YYYY-MM-DD`) already
-supports `BETWEEN` comparison in SQLite.
+supports range comparison in SQLite.
+
+Filtering supports independent bounds: `date_from` adds `AND date >= ?`,
+`date_to` adds `AND date <= ?`. Either, both, or neither may be supplied.
 
 ## Templates
 - **Modify**: `templates/profile.html`
@@ -51,18 +54,26 @@ supports `BETWEEN` comparison in SQLite.
     bar can reflect the active state
 - `database/queries.py`
   - `get_summary_stats(user_id, date_from=None, date_to=None)` — add optional
-    date-range params; when both are provided, add `AND date BETWEEN ? AND ?`
-    to the `expenses` queries
+    date-range params. Each bound is independent: `date_from` appends
+    `AND date >= ?`, `date_to` appends `AND date <= ?`. Either, both, or
+    neither may be supplied.
   - `get_recent_transactions(user_id, limit=10, date_from=None, date_to=None)` —
-    same pattern; ordering and limit remain unchanged
+    same pattern; ordering and limit remain unchanged.
   - `get_category_breakdown(user_id, date_from=None, date_to=None)` — same
-    pattern; percentage recalculation logic remains unchanged
+    pattern; percentage recalculation logic remains unchanged.
 - `templates/profile.html` — add filter bar (see Templates section)
 - `static/css/profile.css` — add styles for the filter bar and active-preset
   button state using CSS variables only
 
 ## Files to create
-No new files.
+- `static/css/profile.css` — filter bar layout, active-preset state, empty-state
+  styles. Uses CSS variables only.
+- `tests/test_date_filter.py` — unit tests covering `_date_clause` behaviour
+  in `database/queries.py` (filtered windows, single-bound filters, ordering).
+- `tests/test_profile_filter.py` — route-level integration tests for `/profile`
+  filter UI (preset active state, malformed dates, inverted ranges, currency).
+- `tests/test_06-date-filter-profile-page.py` — comprehensive spec-derived test
+  suite covering query helpers + route end-to-end.
 
 ## New dependencies
 No new dependencies.
