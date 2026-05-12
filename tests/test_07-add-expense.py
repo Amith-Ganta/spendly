@@ -287,13 +287,14 @@ class TestInvalidAmount:
     """Invalid amount values must re-render the form (200) with an error flash."""
 
     @pytest.mark.parametrize("bad_amount,label", [
-        ("0",     "zero"),
-        ("-5",    "negative"),
-        ("-0.01", "small negative"),
-        ("abc",   "non-numeric string"),
-        ("",      "empty string"),
-        ("   ",   "whitespace only"),
-        ("1e999", "overflow float string"),
+        ("0",         "zero"),
+        ("-5",        "negative"),
+        ("-0.01",     "small negative"),
+        ("abc",       "non-numeric string"),
+        ("",          "empty string"),
+        ("   ",       "whitespace only"),
+        ("1e999",     "overflow float string"),
+        ("20000000",  "over MAX_AMOUNT (10_000_000)"),
     ])
     def test_rerenders_form_no_insert(self, auth_client, seed_user_id, bad_amount, label):
         """Bad amount must not insert any row and must return 200."""
@@ -329,6 +330,17 @@ class TestInvalidAmount:
             "Flash error for non-numeric amount must be present"
         )
 
+    def test_over_max_amount_shows_distinct_flash_error(self, auth_client):
+        """An amount above MAX_AMOUNT must flash a 'must not exceed' error, NOT the generic positive-number message."""
+        response = auth_client.post("/expenses/add", data=dict(VALID, amount="20000000"))
+        assert b"must not exceed" in response.data, (
+            "Flash error for too-large amount must indicate the value exceeds the cap"
+        )
+        # The generic 'positive number' message would be misleading here and must not be the one shown.
+        assert b"Amount must be a positive number." not in response.data, (
+            "Generic positive-number error must not be shown for an amount that is positive but too large"
+        )
+
     def test_submitted_values_preserved_on_error(self, auth_client):
         """On amount error the submitted date must be re-populated in the re-rendered form."""
         response = auth_client.post(
@@ -340,14 +352,15 @@ class TestInvalidAmount:
         )
 
     def test_submitted_category_preserved_on_error(self, auth_client):
-        """On amount error the submitted category must be re-populated in the re-rendered form."""
+        """On amount error the submitted category must be rendered as the selected option."""
         response = auth_client.post(
             "/expenses/add",
             data=dict(VALID, amount="bad", category="Transport"),
         )
-        # The selected category should appear as selected in the dropdown
-        assert b"Transport" in response.data, (
-            "Previously submitted category must be preserved in the re-rendered form"
+        # The Transport option must carry the selected attribute, not merely appear in the page
+        # (the word "Transport" appears unconditionally because it is one of the seven categories).
+        assert b'value="Transport" selected' in response.data, (
+            "Previously submitted category 'Transport' must be rendered as selected in the dropdown"
         )
 
 
@@ -486,19 +499,23 @@ class TestProfileIntegration:
             "New expense amount must be visible on /profile after successful add"
         )
 
-    def test_transaction_count_increments_on_profile(self, auth_client):
-        """Summary stats transaction count must increase by 1 after adding an expense."""
-        # Read count before
-        before_response = auth_client.get("/profile")
-        # Capture digit from "Transactions" stat — look for current count in page
-        # We verify by adding and confirming count change via DB helper approach:
-        # Just confirm profile renders 200 and the new count appears (trusts query layer)
-        auth_client.post("/expenses/add", data=VALID)
-        after_response = auth_client.get("/profile")
-        assert after_response.status_code == 200, "Profile must return 200 after add"
-        # The profile page must still show the Transactions stat label
-        assert b"Transactions" in after_response.data, (
-            "Transactions stat section must still be present after adding an expense"
+    def test_transaction_count_increments_on_profile(self, auth_client, seed_user_id):
+        """Adding a valid expense must increment the underlying transaction count by exactly 1."""
+        before = _count_expenses(seed_user_id)
+        post_response = auth_client.post("/expenses/add", data=VALID)
+        assert post_response.status_code == 302, (
+            "Valid POST must redirect (302) — otherwise the count assertion below is meaningless"
+        )
+
+        after = _count_expenses(seed_user_id)
+        assert after == before + 1, (
+            f"Expense count must increase by exactly 1; was {before}, became {after}"
+        )
+
+        # And the profile page must still render successfully after the new row exists.
+        profile_response = auth_client.get("/profile")
+        assert profile_response.status_code == 200, (
+            "Profile must return 200 after adding an expense"
         )
 
     def test_add_expense_cta_present_on_profile(self, auth_client):
