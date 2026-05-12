@@ -1,5 +1,6 @@
 import math
 import os
+import secrets
 import sqlite3
 from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, session
@@ -8,7 +9,7 @@ from database.db import init_db, seed_db, create_user, create_expense, get_user_
 from database import queries
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or "dev-secret-key"
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 
 EXPENSE_CATEGORIES = (
     "Food", "Transport", "Bills", "Health",
@@ -216,10 +217,14 @@ def add_expense():
 
     try:
         amount = float(form["amount"])
-        if not math.isfinite(amount) or amount <= 0 or amount > MAX_AMOUNT:
+        if not math.isfinite(amount) or amount <= 0:
             raise ValueError
     except (ValueError, TypeError):
         flash("Amount must be a positive number.")
+        return _render_add_form(form, today)
+
+    if amount > MAX_AMOUNT:
+        flash(f"Amount must not exceed ₹{MAX_AMOUNT:,.2f}.")
         return _render_add_form(form, today)
 
     if form["category"] not in EXPENSE_CATEGORIES:
