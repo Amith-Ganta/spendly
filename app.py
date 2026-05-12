@@ -1,12 +1,22 @@
+import math
+import os
 import sqlite3
 from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, session
 from werkzeug.security import check_password_hash
-from database.db import init_db, seed_db, create_user, get_user_by_email
+from database.db import init_db, seed_db, create_user, create_expense, get_user_by_email
 from database import queries
 
 app = Flask(__name__)
-app.secret_key = "dev-secret-key"
+app.secret_key = os.environ.get("SECRET_KEY") or "dev-secret-key"
+
+EXPENSE_CATEGORIES = (
+    "Food", "Transport", "Bills", "Health",
+    "Entertainment", "Shopping", "Other",
+)
+MAX_AMOUNT = 10_000_000
+MAX_DESCRIPTION_LENGTH = 200
+MIN_EXPENSE_YEAR = 2000
 
 
 # ------------------------------------------------------------------ #
@@ -123,6 +133,7 @@ def login():
     if not user or not check_password_hash(user["password_hash"], password):
         return render_template("login.html", error="Invalid email or password.")
 
+    session.clear()
     session["user_id"] = user["id"]
     return redirect(url_for("landing"))
 
@@ -187,9 +198,62 @@ def analytics():
     return render_template("analytics.html")
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    today = date.today().isoformat()
+    if request.method == "GET":
+        return _render_add_form({}, today)
+
+    form = {
+        "amount":      request.form.get("amount", ""),
+        "category":    request.form.get("category", ""),
+        "date":        request.form.get("date", ""),
+        "description": request.form.get("description", ""),
+    }
+
+    try:
+        amount = float(form["amount"])
+        if not math.isfinite(amount) or amount <= 0 or amount > MAX_AMOUNT:
+            raise ValueError
+    except (ValueError, TypeError):
+        flash("Amount must be a positive number.")
+        return _render_add_form(form, today)
+
+    if form["category"] not in EXPENSE_CATEGORIES:
+        flash("Please choose a valid category.")
+        return _render_add_form(form, today)
+
+    try:
+        parsed_date = datetime.strptime(form["date"], "%Y-%m-%d").date()
+        if parsed_date.year < MIN_EXPENSE_YEAR or parsed_date > date.today():
+            raise ValueError
+    except ValueError:
+        flash("Please enter a valid date.")
+        return _render_add_form(form, today)
+
+    description = form["description"].strip()
+    if len(description) > MAX_DESCRIPTION_LENGTH:
+        flash(f"Description must be {MAX_DESCRIPTION_LENGTH} characters or fewer.")
+        return _render_add_form(form, today)
+
+    create_expense(
+        session["user_id"], amount, form["category"],
+        form["date"], description or None,
+    )
+    flash("Expense added.")
+    return redirect(url_for("profile"))
+
+
+def _render_add_form(form, today):
+    return render_template(
+        "add_expense.html",
+        categories=EXPENSE_CATEGORIES,
+        today=today,
+        form=form,
+    )
 
 
 @app.route("/expenses/<int:id>/edit")

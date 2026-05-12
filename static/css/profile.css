@@ -8,6 +8,10 @@
     margin: 1rem 0;
 }
 
+.profile-header__actions {
+    margin-left: auto;
+}
+
 .filter-bar {
     display: flex;
     align-items: center;
