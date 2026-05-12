@@ -20,8 +20,8 @@
             </a>
             <div class="nav-links">
                 {% if session.user_id %}
-                <a href="{{ url_for('profile') }}" class="nav-profile{% if request.endpoint == 'profile' %} active{% endif %}">Profile</a>
-                <a href="{{ url_for('analytics') }}" class="nav-profile{% if request.endpoint == 'analytics' %} active{% endif %}">Analytics</a>
+                <a href="{{ url_for('profile') }}" class="nav-auth-link{% if request.endpoint == 'profile' %} active{% endif %}">Profile</a>
+                <a href="{{ url_for('analytics') }}" class="nav-auth-link{% if request.endpoint == 'analytics' %} active{% endif %}">Analytics</a>
                 <form method="POST" action="{{ url_for('logout') }}" class="nav-logout-form">
                     <button type="submit" class="nav-link-btn">Sign out</button>
                 </form>
