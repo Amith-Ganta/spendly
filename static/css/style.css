@@ -872,7 +872,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 600px) {
-    .nav-links a:not(.nav-cta):not(.nav-profile) { display: none; }
+    .nav-links a:not(.nav-cta):not(.nav-auth-link) { display: none; }
     .hero { padding: 3rem 1rem 2rem; }
     .stats-row { grid-template-columns: 1fr; }
     .profile-page { padding: 1.5rem 1rem; }
